@@ -9,23 +9,32 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest]
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
       - name: '        Tests'
-        run: npm cit
+        run: |
+          npm ci
+          npm run test:jest
+      - name: '        Tests - Mocha'
+        run: npm run test:mocha
+      - name: '        Group reports'
+        run: |
+          mkdir COV_REPORT
+          cp coverage/coverage-final.json COV_REPORT/coverage-final-mocha.json
+          cp coverage_jest/coverage-final.json COV_REPORT/coverage-final-jest.json
       - name: '     Coverage'
         if: success()
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: 'COVERAGE-${{ matrix.os }}'
-          path: 'coverage/'
+          name: 'COV_REPORT-${{ matrix.os }}'
+          path: 'COV_REPORT/'
       - name: '      CodeCov'
         if: success()
         uses: codecov/codecov-action@v1.0.12
         with:
-          file: 'COVERAGE*'
+          file: 'COV_REPORT*'
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-${{ matrix.os }}
           fail_ci_if_error: false
